@@ -72,15 +72,16 @@ abstract class Navigator(
 
     private fun registerSavedState(registry: SavedStateRegistry) {
         with(registry) {
-            if (isRestored) {
-                val savedInstance = consumeRestoredStateForKey(KEY_SAVED_STATE)
-                if (savedInstance != null) onRestoreInstance(savedInstance)
-            }
             unregisterSavedStateProvider(KEY_SAVED_STATE)
             registerSavedStateProvider(
                 KEY_SAVED_STATE,
                 mSavedStateListener
             )
+
+            if (isRestored) {
+                val savedInstance = consumeRestoredStateForKey(KEY_SAVED_STATE)
+                if (savedInstance != null) onRestoreInstance(savedInstance)
+            }
         }
     }
 

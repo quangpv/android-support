@@ -24,7 +24,12 @@ fun <T : ViewBinding> Fragment.viewBinding(function: View.() -> T): Lazy<T> = ob
 
     override val value: T
         get() {
-            if (mValue == null) mValue = function(requireView())
+            if (mValue == null) mValue = function(
+                view ?: error(
+                    "Fragment view is not created yet!, " +
+                            "please ensure binding called at onViewCreated"
+                )
+            )
             return mValue!!
         }
 

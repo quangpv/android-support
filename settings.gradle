@@ -10,7 +10,8 @@ dependencyResolutionManagement {
 rootProject.name = "AndroidSupport"
 include ':app'
 include ':support-di'
-include ':support-caching'
+include ':support-persistent'
 include ':support-navigation'
 include ':support-viewmodel'
 include ':support-core'
+include ':support-app-lifecycle'

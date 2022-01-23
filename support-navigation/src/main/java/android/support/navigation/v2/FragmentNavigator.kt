@@ -198,5 +198,4 @@ class FragmentNavigator(
         }
         return previous != null
     }
-
 }

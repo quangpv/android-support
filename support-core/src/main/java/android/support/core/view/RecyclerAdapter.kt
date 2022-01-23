@@ -129,7 +129,6 @@ abstract class RecyclerHolder<T>(itemView: View) : RecyclerView.ViewHolder(itemV
     final override var item: T? = null
         private set
 
-    @CallSuper
     override fun bind(item: T) {
         this.item = item
     }

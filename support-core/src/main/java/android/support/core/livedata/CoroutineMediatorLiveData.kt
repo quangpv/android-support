@@ -5,8 +5,9 @@ import androidx.lifecycle.MediatorLiveData
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
-class CoroutineMediatorLiveData<T>(private val timeout: Long = 5000) : MediatorLiveData<T>() {
+open class CoroutineMediatorLiveData<T>(private val timeout: Long = 5000) : MediatorLiveData<T>() {
     private var mScope: CoroutineScope? = null
+    protected val scope get() = mScope ?: error("My Scope not initialized yet!")
 
     override fun onActive() {
         super.onActive()

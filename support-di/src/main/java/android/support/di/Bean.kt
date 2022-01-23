@@ -3,6 +3,7 @@ package android.support.di
 import android.app.Activity
 import android.app.Application
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.getOrPut
@@ -37,25 +38,33 @@ internal class FactoryBean<T>(
             error("Please use SingletonBean to registry")
         }
 
-        val useDefaultFactory = (share == ShareScope.None)
-                || (owner !is ViewModelStoreOwner)
-                || (share == ShareScope.Fragment && owner is Activity)
+        if ((share == ShareScope.None)
+            || (owner !is ViewModelStoreOwner)
+        ) return getByDefault(context)
 
-        if (useDefaultFactory) {
-            return function(context)
+        when (share) {
+            ShareScope.Fragment -> {
+                if (owner is Activity) return getByDefault(context)
+                return getByShared(context, owner) //Owner is fragment
+            }
+            ShareScope.Activity -> {
+                if (owner is Fragment) return getByShared(context, owner.requireActivity())
+                return getByShared(context, owner) //Owner is Activity
+            }
+            else -> return getByShared(context, owner) // Owner is Fragment or Activity
         }
+    }
 
-        var shareOwner = owner
-
-        if (share == ShareScope.Activity && owner is Fragment) {
-            shareOwner = owner.requireActivity()
-        }
-
-        val viewModel = (shareOwner as ViewModelStoreOwner).viewModelStore
+    private fun getByShared(context: LookupContext, owner: LifecycleOwner): T {
+        val viewModel = (owner as ViewModelStoreOwner).viewModelStore
             .getOrPut("android:support:di:share") {
                 ShareDIInstanceViewModel()
             }
         return viewModel.getOrPut(clazz) { function(context) }
+    }
+
+    private fun getByDefault(context: LookupContext): T {
+        return function(context)
     }
 
     override fun getValue(): T {

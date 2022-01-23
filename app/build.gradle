@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-parcelize'
 }
 
 android {
@@ -30,6 +31,9 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 dependencies {
@@ -38,11 +42,29 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.0'
     implementation 'com.google.android.material:material:1.4.0'
 
+    def retrofitV = "2.9.0"
+    def lifecycleV = "2.4.0"
+    def glideV = "4.12.0"
+    def okhttp3V = "4.9.0"
+
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleV"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleV"
+
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+
+    implementation "com.squareup.retrofit2:retrofit:$retrofitV"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofitV"
+    implementation "com.squareup.okhttp3:okhttp:$okhttp3V"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okhttp3V"
+    testImplementation 'org.mockito.kotlin:mockito-kotlin:4.0.0'
+
+    implementation project(':support-app-lifecycle')
     implementation project(':support-core')
-    implementation project(':support-caching')
+    implementation project(':support-persistent')
     implementation project(':support-di')
     implementation project(':support-navigation')
     implementation project(':support-viewmodel')
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
 
     implementation("androidx.multidex:multidex:2.0.1")
     implementation 'androidx.constraintlayout:constraintlayout:2.1.2'

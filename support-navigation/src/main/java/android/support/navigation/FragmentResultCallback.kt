@@ -14,7 +14,7 @@ fun Fragment.notifyResultIfNeeded(result: Bundle?) {
         lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
                 super.onStart(owner)
-                lifecycle.removeObserver(this)
+                owner.lifecycle.removeObserver(this)
                 onFragmentResult(result)
             }
         })

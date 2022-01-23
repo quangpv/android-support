@@ -8,12 +8,11 @@ fun Int?.safe(def: Int = 0): Int {
     return this ?: def
 }
 
-
 infix fun Boolean.throws(message: String) {
     if (this) throw IllegalArgumentException(message)
 }
 
-fun <T : Any> block(any: T?, block: T.() -> Unit) {
+inline fun <T : Any> block(any: T?, block: T.() -> Unit) {
     if (any != null) block(any)
 }
 
@@ -33,39 +32,66 @@ fun <E, K> List<E>?.toMap(keyOf: E.() -> K): HashMap<K, E> {
 
 interface TryBlock<T> {
 
-    infix fun returns(function: (Throwable) -> T): T
-    infix fun answers(function: (Throwable) -> Unit)
-    infix fun throws(exception: (Throwable) -> RuntimeException): T
+    infix fun returns(block: (Throwable) -> T): T
+    infix fun answers(block: (Throwable) -> Unit)
+    infix fun throws(block: (Throwable) -> Throwable): T
+
+    suspend infix fun suspendReturns(block: suspend (Throwable) -> T): T
+    suspend infix fun suspendAnswers(block: suspend (Throwable) -> Unit)
+    suspend infix fun suspendThrows(block: suspend (Throwable) -> Throwable): T
 
     class Success<T>(private val result: T) : TryBlock<T> {
-        override fun returns(function: (Throwable) -> T): T {
+        override fun returns(block: (Throwable) -> T): T {
             return result
         }
 
-        override fun answers(function: (Throwable) -> Unit) {
+        override fun answers(block: (Throwable) -> Unit) {
         }
 
-        override fun throws(exception: (Throwable) -> RuntimeException): T {
+        override fun throws(block: (Throwable) -> Throwable): T {
+            return result
+        }
+
+        override suspend fun suspendReturns(block: suspend (Throwable) -> T): T {
+            return result
+        }
+
+        override suspend fun suspendAnswers(block: suspend (Throwable) -> Unit) {
+        }
+
+        override suspend fun suspendThrows(block: suspend (Throwable) -> Throwable): T {
             return result
         }
     }
 
     class Error<T>(private val e: Throwable) : TryBlock<T> {
-        override fun returns(function: (Throwable) -> T): T {
-            return function(e)
+        override fun returns(block: (Throwable) -> T): T {
+            return block(e)
         }
 
-        override fun answers(function: (Throwable) -> Unit) {
-            function(e)
+        override fun answers(block: (Throwable) -> Unit) {
+            block(e)
         }
 
-        override fun throws(exception: (Throwable) -> RuntimeException): T {
-            throw exception(e)
+        override fun throws(block: (Throwable) -> Throwable): T {
+            throw block(e)
+        }
+
+        override suspend fun suspendReturns(block: suspend (Throwable) -> T): T {
+            return block(e)
+        }
+
+        override suspend fun suspendAnswers(block: suspend (Throwable) -> Unit) {
+            block(e)
+        }
+
+        override suspend fun suspendThrows(block: suspend (Throwable) -> Throwable): T {
+            throw block(e)
         }
     }
 }
 
-fun <T> tryWith(function: () -> T): TryBlock<T> {
+inline fun <T> tryWith(function: () -> T): TryBlock<T> {
     return try {
         TryBlock.Success(function())
     } catch (e: Throwable) {

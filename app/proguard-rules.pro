@@ -19,3 +19,19 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep public class * extends java.lang.annotation.Annotation { *; }
+
+# Keep Dependency Injection Constructor
+-keepclassmembers @android.support.di.Inject public class * {
+ public <init>(...);
+}
+
+-keepclassmembers class * extends android.support.di.Injectable {
+ public <init>(...);
+}
+
+# Keep ViewModel Constructor
+-keepclassmembers class * extends androidx.lifecycle.ViewModel{
+ public <init>(...);
+}

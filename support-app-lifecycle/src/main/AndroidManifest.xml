@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="android.support.applifecycle">
+
+    <uses-sdk
+        android:minSdkVersion="21"
+        android:targetSdkVersion="31"
+        tools:ignore="GradleOverrides" />
+
+    <application>
+        <provider
+            android:name=".ApplicationInitializeProvider"
+            android:authorities="${applicationId}.support-core-startup"
+            android:exported="false"
+            tools:node="merge" />
+    </application>
+</manifest>
