@@ -21,7 +21,6 @@ private open class SingleEventFlowImpl<T>(
 ) : SingleEventFlow<T> {
     private val mPending = AtomicBoolean(false)
 
-    @InternalCoroutinesApi
     override suspend fun collect(collector: FlowCollector<T>) {
         flow.collect {
             if (mPending.compareAndSet(true, false)) {

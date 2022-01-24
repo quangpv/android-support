@@ -46,7 +46,6 @@ private class DistributionFlowImpl<T>(def: T) : DistributionFlow<T>, Flow<T> {
         stateFlow.value = value
     }
 
-    @InternalCoroutinesApi
     override suspend fun collect(collector: FlowCollector<T>) {
         // Each collector be collected, will start a coroutine to check source update
         try {

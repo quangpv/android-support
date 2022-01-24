@@ -19,7 +19,7 @@ private class PipeFlowImpl<T> : PipeFlow<T> {
     private var mSource: Source<T>? = null
     private val channels = CollectorChannels<T>()
 
-    @InternalCoroutinesApi
+    @OptIn(InternalCoroutinesApi::class)
     override suspend fun collect(collector: FlowCollector<T>) {
         try {
             val channel = channels.allocSlot(collector)
