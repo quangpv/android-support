@@ -9,7 +9,6 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:7.0.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.0"
-        classpath 'com.github.kezong:fat-aar:1.3.6'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -26,6 +25,7 @@ subprojects {
 
     if (!name.contains(supportPrefix)) return
     String artifactName = name.replace(supportPrefix, "").replace("-", "")
+    Boolean shouldExportJavaDoc = artifactName != 'viewmodel'
 
     println("Add config to publish module ${artifactName}")
     apply plugin: 'maven-publish'
@@ -40,25 +40,28 @@ subprojects {
             archiveClassifier.set('sources')
         }
 
-        task javadoc(type: Javadoc) {
-            failOnError false
-            source = android.sourceSets.main.java.sourceFiles
-            classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-            configurations.implementation.setCanBeResolved(true)
-            configurations.api.setCanBeResolved(true)
-            classpath += configurations.implementation
-        }
+        if (shouldExportJavaDoc) {
+            task javadoc(type: Javadoc) {
+                failOnError false
+                source = android.sourceSets.main.java.sourceFiles
+                classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+                configurations.implementation.setCanBeResolved(true)
+                configurations.api.setCanBeResolved(true)
+                classpath += configurations.implementation
+            }
 
-        task javadocJar(type: Jar, dependsOn: javadoc) {
-            archiveClassifier.set('javadoc')
-            from javadoc.destinationDir
+            task javadocJar(type: Jar, dependsOn: javadoc) {
+                archiveClassifier.set('javadoc')
+                from javadoc.destinationDir
+            }
         }
 
         artifacts {
             archives sourcesJar
-            archives javadocJar
+            if (shouldExportJavaDoc) {
+                archives javadocJar
+            }
         }
-
         afterEvaluate {
             publishing {
                 publications {
@@ -69,7 +72,9 @@ subprojects {
                         afterEvaluate {
                             artifact bundleReleaseAar
                             artifact sourcesJar
-                            artifact javadocJar
+                            if (shouldExportJavaDoc) {
+                                artifact javadocJar
+                            }
                         }
                     }
                 }

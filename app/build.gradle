@@ -86,10 +86,7 @@ dependencies {
     implementation project(':support-persistent')
     implementation project(':support-di')
     implementation project(':support-navigation')
-    implementation(project(':support-viewmodel')) {
-        exclude module: 'android.support.core'
-        exclude module: 'android.support.di'
-    }
+    implementation project(':support-viewmodel')
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
 
     implementation("androidx.multidex:multidex:2.0.1")
