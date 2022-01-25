@@ -1,7 +1,6 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
-    id 'maven-publish'
 }
 
 android {
@@ -10,10 +9,7 @@ android {
     defaultConfig {
         minSdk 21
         targetSdk 31
-        versionCode 1
-        versionName "1.0"
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -39,17 +35,4 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
-}
-
-afterEvaluate {
-    publishing {
-        publications {
-            // Creates a Maven publication called "release".
-            release(MavenPublication) {
-                from components.release
-                groupId = 'com.github.quangpv'
-                artifactId = 'core'
-            }
-        }
-    }
 }
