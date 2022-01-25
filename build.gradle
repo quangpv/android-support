@@ -1,6 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.publishVersion = '1.0'
+    ext.publishVersion = '0.0.4-alpha04'
     repositories {
         google()
         mavenCentral()
@@ -19,6 +19,8 @@ task clean(type: Delete) {
 }
 
 subprojects {
+    group = 'com.github.quangpv'
+    version = "$publishVersion"
     Project project = it
     String name = project.name
     String supportPrefix = "support-"
