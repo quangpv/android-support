@@ -16,14 +16,8 @@ fun <T> inject(clazz: Class<T>) = lazy(LazyThreadSafetyMode.NONE) {
     dependenceContext.get(clazz)
 }
 
-fun <T> inject(scopeId: String, clazz: Class<T>) = lazy(LazyThreadSafetyMode.NONE) {
-    dependenceContext.get(scopeId, clazz)
-}
-
 inline fun <reified T> LifecycleOwner.inject(): Lazy<T> = inject(T::class.java)
 inline fun <reified T> inject(): Lazy<T> = inject(T::class.java)
-
-inline fun <reified T> inject(scopeId: String) = inject(scopeId, T::class.java)
 
 val dependenceContext = DependenceContext()
 

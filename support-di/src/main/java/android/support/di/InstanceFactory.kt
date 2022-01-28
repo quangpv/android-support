@@ -2,10 +2,24 @@ package android.support.di
 
 import android.util.Log
 
-internal object InstanceFactory {
+interface InstanceFactory<T> {
+    fun create(lookupContext: LookupContext): T
+}
+
+internal class ProvideInstanceFactory<T>(
+    private val function: LookupContext.() -> T
+) : InstanceFactory<T> {
+    override fun create(lookupContext: LookupContext): T {
+        return function(lookupContext)
+    }
+}
+
+internal class ReflectNewInstanceFactory<T>(
+    private val clazz: Class<out T>
+) : InstanceFactory<T> {
 
     @Suppress("unchecked_cast")
-    fun <T> create(clazz: Class<T>, lookupContext: LookupContext): T {
+    override fun create(lookupContext: LookupContext): T {
         val constructor = clazz.constructors.firstOrNull()
             ?: clazz.declaredConstructors.firstOrNull()
             ?: error("Not found constructor for ${clazz.simpleName}")

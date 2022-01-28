@@ -52,23 +52,25 @@ class SqliteDiskReadable<T>(
     }
 
     override suspend fun findAllWith(options: QueryOptions): PagingList<T> {
-        queryBuilder.use(searchStrategy)
+        fun executeQuery(builder: SearchQueryBuilder): PagingList<T> {
+            val jsonQuery = builder.build(tableName, options)
+            val countQuery = builder.buildCount(tableName, options)
 
-        fun executeQuery(query: String): PagingList<T> {
-            var total = 0
-            val data = database.rawQuery(query, emptyArray()).readListOrEmpty {
-                val data = it.getString(0)
-                total = it.getInt(1)
-                deserialize(data)
+            val cursor = database.rawQuery(jsonQuery, emptyArray())
+            val total = if (countQuery != null) {
+                database.rawQuery(countQuery, emptyArray())
+                    .readOne { it.getInt(0) } ?: cursor.count
+            } else cursor.count
+            val data = cursor.readListOrEmpty {
+                deserialize(it.getString(0))
             }
             return PagingList(data, options.page, options.size, total)
         }
 
-        val result = executeQuery(queryBuilder.build(tableName, options))
+        val result = executeQuery(queryBuilder.use(searchStrategy))
 
         if (!searchStrategy.accept(result)) {
-            queryBuilder.use(searchStrategy.alternativeStrategy)
-            return executeQuery(queryBuilder.build(tableName, options))
+            return executeQuery(queryBuilder.use(searchStrategy.alternativeStrategy))
         }
         return result
     }
@@ -98,11 +100,12 @@ class SqliteDiskReadable<T>(
     class SearchQueryBuilder {
         private var mStrategy: SearchStrategy = SearchStrategy.Default
 
-        fun use(strategy: SearchStrategy) {
+        fun use(strategy: SearchStrategy): SearchQueryBuilder {
             mStrategy = strategy
+            return this
         }
 
-        fun build(tableName: String, options: QueryOptions): String {
+        private fun doBuild(tableName: String, options: QueryOptions): String {
             val queryBuilder = StringBuilder()
             var whereClauseExists = false
             var tableSearch = tableName
@@ -136,7 +139,16 @@ class SqliteDiskReadable<T>(
                 queryBuilder.append(" limit $pageLimit offset $pageOffset")
             }
 
-            return "select jsonContent, COUNT() OVER() AS totalCount from $tableSearch $queryBuilder"
+            return "$tableSearch $queryBuilder"
+        }
+
+        fun build(tableName: String, options: QueryOptions): String {
+            return "select jsonContent from ${doBuild(tableName, options)}"
+        }
+
+        fun buildCount(tableName: String, options: QueryOptions): String? {
+            if (options.size > 0) return "select count(*) from ${doBuild(tableName, options)}"
+            return null
         }
     }
 }

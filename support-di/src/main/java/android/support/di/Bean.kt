@@ -3,79 +3,83 @@ package android.support.di
 import android.app.Activity
 import android.app.Application
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.getOrPut
+import java.util.*
 
 interface Bean<T> {
-    fun getValue(): T
+    fun getValue(context: LookupContext): T
+    fun close() {}
+}
+
+internal class ApplicationBean(private val application: Application) : Bean<Application> {
+
+    override fun getValue(context: LookupContext): Application {
+        return application
+    }
+
+    fun isDiff(app: Application): Boolean {
+        return application != app
+    }
 }
 
 internal class SingletonBean<T>(
-    private val function: () -> T
+    private val instanceFactory: InstanceFactory<T>,
 ) : Bean<T> {
     private var mValue: T? = null
 
-    override fun getValue(): T {
+    override fun getValue(context: LookupContext): T {
         if (mValue == null) synchronized(this) {
-            if (mValue == null) mValue = function()
+            if (mValue == null) {
+                mValue = instanceFactory.create(
+                    (context as? LifecycleLookupContext)?.globalContext() ?: context
+                )
+            }
         }
         return mValue!!
     }
+
+    override fun close() {
+        (mValue as? AutoCloseable)?.close()
+        mValue = null
+    }
 }
 
-internal class FactoryBean<T>(
-    private val share: ShareScope,
-    private val clazz: Class<T>,
-    private val function: (LookupContext?) -> T
+internal class DefaultFactoryBean<T>(
+    private val instanceFactory: InstanceFactory<T>,
 ) : Bean<T> {
+    override fun getValue(context: LookupContext): T {
+        return instanceFactory.create(context)
+    }
+}
 
-    fun getValue(context: LookupContext): T {
-        val owner = (context as LifecycleLookup).owner
-
-        if (share == ShareScope.Singleton) {
-            error("Please use SingletonBean to registry")
+internal abstract class LifecycleBean<T>(
+    val instanceFactory: InstanceFactory<T>,
+) : Bean<T> {
+    final override fun getValue(context: LookupContext): T {
+        if (context !is LifecycleLookup) {
+            return instanceFactory.create(context)
         }
+        val owner = context.owner as? ViewModelStoreOwner
+            ?: error("${context.owner} should be ViewModelStoreOwner")
+        return getValue(context, owner)
+    }
 
-        if ((share == ShareScope.None)
-            || (owner !is ViewModelStoreOwner)
-        ) return getByDefault(context)
+    protected abstract fun getValue(context: LookupContext, owner: ViewModelStoreOwner): T
 
-        when (share) {
-            ShareScope.Fragment -> {
-                if (owner is Activity) return getByDefault(context)
-                return getByShared(context, owner) //Owner is fragment
-            }
-            ShareScope.Activity -> {
-                if (owner is Fragment) return getByShared(context, owner.requireActivity())
-                return getByShared(context, owner) //Owner is Activity
-            }
-            else -> return getByShared(context, owner) // Owner is Fragment or Activity
+    protected fun getInstanceContainer(owner: ViewModelStoreOwner): InstanceContainer {
+        return owner.viewModelStore.getOrPut("android:support:di:share:instance:container") {
+            InstanceContainer()
         }
     }
 
-    private fun getByShared(context: LookupContext, owner: LifecycleOwner): T {
-        val viewModel = (owner as ViewModelStoreOwner).viewModelStore
-            .getOrPut("android:support:di:share") {
-                ShareDIInstanceViewModel()
-            }
-        return viewModel.getOrPut(clazz) { function(context) }
-    }
-
-    private fun getByDefault(context: LookupContext): T {
-        return function(context)
-    }
-
-    override fun getValue(): T {
-        return function(null)
-    }
-
-    private class ShareDIInstanceViewModel : ViewModel() {
-        private var mCache = hashMapOf<Class<*>, Any>()
+    protected class InstanceContainer : ViewModel() {
+        private var mCache = hashMapOf<String, Any>()
 
         @Suppress("unchecked_cast")
-        fun <T> getOrPut(key: Class<*>, def: () -> T): T {
+        fun <T> getOrPut(keyClass: Class<*>, def: () -> T): T {
+            val key = keyClass.name
             var mValue = mCache[key]
             if (mValue == null) {
                 synchronized(this) {
@@ -97,24 +101,66 @@ internal class FactoryBean<T>(
             }
             mCache.clear()
         }
+
+        fun <T> put(value: T): T {
+            return synchronized(this) {
+                var key = UUID.randomUUID().toString()
+                while (mCache.containsKey(key)) {
+                    key = UUID.randomUUID().toString()
+                }
+                mCache[key] = value as Any
+                value
+            }
+        }
     }
 }
 
-internal class ScopeBean<T>(private val function: () -> T) : Bean<T> {
-    private var mValue: T? = null
+internal class FragmentScopeBean<T>(
+    private val keyClass: Class<T>,
+    instanceFactory: InstanceFactory<T>,
+) : LifecycleBean<T>(instanceFactory) {
 
-    fun dispose() {
-        mValue = null
-    }
-
-    override fun getValue(): T {
-        if (mValue == null) mValue = function()
-        return mValue!!
+    override fun getValue(context: LookupContext, owner: ViewModelStoreOwner): T {
+        return when (owner) {
+            is Activity -> {
+                getInstanceContainer(owner).put(instanceFactory.create(context))
+            }
+            else -> getInstanceContainer(owner).getOrPut(keyClass) {
+                instanceFactory.create(context)
+            }
+        }
     }
 }
 
-internal class ApplicationBean(private val application: Application) : Bean<Application> {
-    override fun getValue(): Application {
-        return application
+internal class ActivityScopeBean<T>(
+    private val keyClass: Class<T>,
+    instanceFactory: InstanceFactory<T>,
+) : LifecycleBean<T>(instanceFactory) {
+
+    override fun getValue(context: LookupContext, owner: ViewModelStoreOwner): T {
+        var newContext = context
+        val containerOwner = when (owner) {
+            is Activity -> owner
+            else -> {
+                val activity = (owner as Fragment).requireActivity()
+                newContext = (context as LifecycleLookupContext).newContext(activity)
+                activity
+            }
+        }
+        return getInstanceContainer(containerOwner).getOrPut(keyClass) {
+            instanceFactory.create(newContext)
+        }
+    }
+}
+
+internal class FragmentOrActivityScopeBean<T>(
+    private val keyClass: Class<T>,
+    instanceFactory: InstanceFactory<T>,
+) : LifecycleBean<T>(instanceFactory) {
+
+    override fun getValue(context: LookupContext, owner: ViewModelStoreOwner): T {
+        return getInstanceContainer(owner).getOrPut(keyClass) {
+            instanceFactory.create(context)
+        }
     }
 }

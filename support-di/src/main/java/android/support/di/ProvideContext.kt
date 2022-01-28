@@ -17,8 +17,6 @@ abstract class ProvideContext {
         function: LookupContext.() -> T
     )
 
-    abstract fun <T> scope(scopeId: String, clazz: Class<T>, function: LookupContext.() -> T)
-
     inline fun <reified T> single(
         override: Boolean = false,
         noinline function: LookupContext.() -> T
@@ -32,9 +30,5 @@ abstract class ProvideContext {
         noinline function: LookupContext.() -> T
     ) {
         return factory(override, shareIn, T::class.java, function)
-    }
-
-    inline fun <reified T> scope(scopeId: String, noinline function: LookupContext.() -> T) {
-        return scope(scopeId, T::class.java, function)
     }
 }

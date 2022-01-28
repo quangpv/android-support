@@ -43,14 +43,16 @@ data class DataTable(
                 CREATE VIRTUAL TABLE IF NOT EXISTS $indexTable USING fts4(
                     jsonContent UNINDEXED,
                     searchContent,
+                    groupBy UNINDEXED,
+                    folder UNINDEXED,
                     tokenize=simple);
                 """.trimIndent(),
 
                 // Trigger insert
                 """
                 CREATE TRIGGER IF NOT EXISTS $insertTrigger AFTER INSERT ON $tableName BEGIN
-                  INSERT INTO $indexTable (rowid,jsonContent,searchContent)
-                  VALUES(new.id,new.jsonContent,new.searchContent);
+                  INSERT INTO $indexTable (rowid,jsonContent,searchContent,groupBy,folder)
+                  VALUES(new.id,new.jsonContent,new.searchContent,new.groupBy,new.folder);
                 END;
                 """.trimIndent(),
 
@@ -60,6 +62,8 @@ data class DataTable(
                   UPDATE $indexTable 
                   SET jsonContent = new.jsonContent 
                     AND searchContent = new.searchContent
+                    AND groupBy = new.groupBy
+                    AND folder = new.folder
                   WHERE rowid = old.id;
                 END;
                 """.trimIndent(),

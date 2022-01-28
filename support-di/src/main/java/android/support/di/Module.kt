@@ -2,7 +2,7 @@ package android.support.di
 
 class Module(
     private val context: DependenceContext,
-    private val provide: (ProvideContext) -> Unit
+    private val provide: (ProvideContext) -> Unit,
 ) : ProvideContext() {
     private var mModules: Array<out Module>? = null
 
@@ -18,13 +18,9 @@ class Module(
         override: Boolean,
         shareIn: ShareScope,
         clazz: Class<T>,
-        function: LookupContext.() -> T
+        function: LookupContext.() -> T,
     ) {
         context.factory(override, shareIn, clazz, function)
-    }
-
-    override fun <T> scope(scopeId: String, clazz: Class<T>, function: LookupContext.() -> T) {
-        context.scope(scopeId, clazz, function)
     }
 
     fun provide() {
