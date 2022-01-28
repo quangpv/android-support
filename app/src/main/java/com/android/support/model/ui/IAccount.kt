@@ -1,4 +1,4 @@
-package com.android.support.model
+package com.android.support.model.ui
 
 import android.os.Parcelable
 import com.android.support.R

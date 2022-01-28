@@ -12,7 +12,7 @@ import com.android.support.app.AppActivity
 import com.android.support.feature.HomeActivity
 import com.android.support.navigation.Router
 import com.android.support.navigation.Routing
-import com.android.support.repo.CheckLoginRepo
+import com.android.support.repo.auth.CheckLoginRepo
 
 class MainActivity : AppActivity(0) {
     private val viewModel by viewModel<VM>()

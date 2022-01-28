@@ -1,12 +1,12 @@
-package com.android.support.repo
+package com.android.support.repo.auth
 
 import android.support.di.InjectBy
 import android.support.di.Injectable
 import android.support.di.ShareScope
-import com.android.support.datasource.AuthenticateApi
-import com.android.support.datasource.UserLocalSource
+import com.android.support.datasource.remote.AuthenticateApi
+import com.android.support.datasource.local.UserLocalSource
 import com.android.support.helper.Validator
-import com.android.support.model.LoginForm
+import com.android.support.model.ui.LoginForm
 
 @InjectBy(LoginRepoV1::class, ShareScope.Activity)
 interface LoginRepo {

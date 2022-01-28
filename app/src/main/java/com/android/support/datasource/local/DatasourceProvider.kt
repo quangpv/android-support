@@ -1,4 +1,4 @@
-package com.android.support.datasource
+package com.android.support.datasource.local
 
 import android.content.Context
 import android.support.di.Inject
@@ -6,7 +6,7 @@ import android.support.di.ShareScope
 import android.support.persistent.disk.DiskStorageFactory
 import android.support.persistent.disk.SearchStrategy
 import android.support.persistent.disk.StorageOptions
-import com.android.support.model.TestEntity
+import com.android.support.model.entity.RandomEntity
 
 @Inject(ShareScope.Singleton)
 class DatasourceProvider(private val context: Context) {
@@ -15,7 +15,7 @@ class DatasourceProvider(private val context: Context) {
     val testDao by lazy {
         factory.create(
             StorageOptions(
-                "test_name", TestEntity::class,
+                "test_name", RandomEntity::class,
                 keyOf = { id },
                 groupBy = { status },
                 searchStrategy = SearchStrategy.Text()

@@ -2,7 +2,7 @@ package com.android.support.factory
 
 import android.support.di.Inject
 import android.support.di.ShareScope
-import com.android.support.model.LoginForm
+import com.android.support.model.ui.LoginForm
 import com.sample.app.model.entity.AccountEntity
 
 @Inject(ShareScope.Activity)

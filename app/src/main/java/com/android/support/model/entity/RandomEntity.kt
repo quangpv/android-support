@@ -1,6 +1,6 @@
-package com.android.support.model
+package com.android.support.model.entity
 
-data class TestEntity(
+data class RandomEntity(
     val id: String,
     val name: String,
     val status: String,

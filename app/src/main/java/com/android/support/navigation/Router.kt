@@ -9,8 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.android.support.app.AppConfig
 import com.android.support.feature.MainNavigationActivity
-import com.android.support.feature.TestDetailFragment
 import com.android.support.feature.auth.LoginFragment
+import com.android.support.feature.random.RandomDetailFragment
 import com.android.support.functional.NotSupportable
 import kotlinx.parcelize.Parcelize
 import kotlin.reflect.KClass
@@ -26,9 +26,9 @@ interface Routing : BundleArgument {
     }
 
     @Parcelize
-    class TestDetail(val id: String) : Routing {
+    class RandomDetail(val id: String, val folderId: Int) : Routing {
         override val fragmentClass: KClass<out Fragment>
-            get() = TestDetailFragment::class
+            get() = RandomDetailFragment::class
     }
 
 }

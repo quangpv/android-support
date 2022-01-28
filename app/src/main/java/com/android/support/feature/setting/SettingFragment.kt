@@ -14,7 +14,7 @@ import com.android.support.app.AppFragment
 import com.android.support.databinding.FragmentSettingBinding
 import com.android.support.navigation.Router
 import com.android.support.navigation.Routing
-import com.android.support.repo.LogoutRepo
+import com.android.support.repo.auth.LogoutRepo
 import com.android.support.widget.TextCenterTopBarState
 import com.android.support.widget.TopBarOwner
 

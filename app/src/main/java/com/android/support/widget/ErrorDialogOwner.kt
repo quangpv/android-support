@@ -1,4 +1,4 @@
-package com.android.support.functional
+package com.android.support.widget
 
 import android.content.Context
 import android.support.core.view.ViewScopeOwner

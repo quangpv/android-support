@@ -1,4 +1,4 @@
-package com.android.support.datasource
+package com.android.support.datasource.remote
 
 import com.android.support.helper.network.Async
 

@@ -5,8 +5,8 @@ import android.support.applifecycle.ApplicationScope
 import android.support.di.module
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.android.support.datasource.AuthenticateApi
-import com.android.support.datasource.MockAuthenticateApi
+import com.android.support.datasource.remote.AuthenticateApi
+import com.android.support.datasource.remote.MockAuthenticateApi
 import com.android.support.helper.network.TLSSocketFactory
 import okhttp3.Cache
 import okhttp3.OkHttpClient

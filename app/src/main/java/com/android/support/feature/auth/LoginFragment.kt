@@ -20,10 +20,10 @@ import com.android.support.app.AppFragment
 import com.android.support.databinding.FragmentLoginBinding
 import com.android.support.extensions.bind
 import com.android.support.feature.HomeActivity
-import com.android.support.model.LoginForm
-import com.android.support.repo.GetSavedAccountRepo
-import com.android.support.repo.LoginRepo
-import com.android.support.repo.SaveAccountRepo
+import com.android.support.model.ui.LoginForm
+import com.android.support.repo.account.GetSavedAccountRepo
+import com.android.support.repo.auth.LoginRepo
+import com.android.support.repo.account.SaveAccountRepo
 import kotlinx.coroutines.launch
 
 class LoginFragment : AppFragment(R.layout.fragment_login) {

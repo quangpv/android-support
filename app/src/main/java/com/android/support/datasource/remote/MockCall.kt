@@ -1,4 +1,4 @@
-package com.android.support.datasource
+package com.android.support.datasource.remote
 
 import okhttp3.Request
 import okio.Timeout
