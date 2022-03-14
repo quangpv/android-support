@@ -23,6 +23,15 @@ class Module(
         context.factory(override, shareIn, clazz, function)
     }
 
+    override fun <T> factory(
+        override: Boolean,
+        shareIn: Array<out String>,
+        clazz: Class<T>,
+        function: LookupContext.() -> T,
+    ) {
+        context.factory(override, shareIn, clazz, function)
+    }
+
     fun provide() {
         mModules?.forEach { it.provide() }
         provide(context)

@@ -30,7 +30,16 @@ class DependenceContext : ProvideContext() {
         ) {
             registry(false, shareIn, keyClass, ReflectNewInstanceFactory(implementClass))
         }
+
+        override fun <T> onDefinitionNotFounded(
+            keyClass: Class<T>,
+            implementClass: Class<out T>,
+            shareIn: Array<out String>,
+        ) {
+            registry(false, shareIn, keyClass, ReflectNewInstanceFactory(implementClass))
+        }
     })
+
     private val mGlobalLookup = GlobalLookupContext(mBeanContainer)
 
     internal fun set(application: Application) {
@@ -58,6 +67,16 @@ class DependenceContext : ProvideContext() {
         }
     }
 
+    private fun <T> registry(
+        override: Boolean,
+        shareIn: Array<out String>,
+        clazz: Class<T>,
+        instanceFactory: InstanceFactory<T>,
+    ) {
+        if (mBeanContainer.contains(clazz) && !override) error(clazz)
+        mBeanContainer[clazz] = NamedScopeBean(shareIn, clazz, instanceFactory)
+    }
+
     override fun <T> single(
         override: Boolean,
         clazz: Class<T>,
@@ -69,6 +88,15 @@ class DependenceContext : ProvideContext() {
     override fun <T> factory(
         override: Boolean,
         shareIn: ShareScope,
+        clazz: Class<T>,
+        function: LookupContext.() -> T,
+    ) {
+        registry(override, shareIn, clazz, ProvideInstanceFactory(function))
+    }
+
+    override fun <T> factory(
+        override: Boolean,
+        shareIn: Array<out String>,
         clazz: Class<T>,
         function: LookupContext.() -> T,
     ) {

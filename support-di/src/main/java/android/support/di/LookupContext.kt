@@ -23,9 +23,15 @@ internal class LifecycleLookupContext(
     private val context: GlobalLookupContext,
     override val owner: LifecycleOwner,
 ) : LookupContext(context), LifecycleLookup {
-    fun newContext(newOwner: LifecycleOwner): LookupContext {
+
+    private fun newContext(newOwner: LifecycleOwner): LookupContext {
         return LifecycleLookupContext(context, newOwner)
     }
 
     fun globalContext() = context
+
+    fun getOrCreate(newOwner: LifecycleOwner): LookupContext {
+        return if (newOwner == owner) context
+        else newContext(newOwner)
+    }
 }

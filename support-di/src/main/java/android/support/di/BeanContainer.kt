@@ -50,19 +50,31 @@ class BeanContainer(private val notFoundCallback: BeanNotFoundCallback) : BeanLo
             }
             clazz.isInterface -> {
                 val annotation = clazz.getAnnotation(InjectBy::class.java)
-                    ?: error("Not found provider for ${clazz.simpleName}")
-                @Suppress("unchecked_cast")
-                notFoundCallback.onDefinitionNotFounded(
+                if (annotation != null) @Suppress("unchecked_cast")
+                return notFoundCallback.onDefinitionNotFounded(
                     clazz,
                     annotation.clazz.java as Class<out T>,
                     annotation.share
                 )
+
+                val annotation1 = clazz.getAnnotation(InjectScopeBy::class.java)
+                    ?: error("Not found provider for ${clazz.simpleName}")
+                notFoundCallback.onDefinitionNotFounded(
+                    clazz,
+                    annotation1.clazz.java as Class<out T>,
+                    annotation1.names
+                )
             }
             else -> {
                 val annotation = clazz.getAnnotation(Inject::class.java)
+                if (annotation != null) {
+                    return notFoundCallback.onDefinitionNotFounded(clazz, clazz, annotation.share)
+                }
+
+                val annotation1 = clazz.getAnnotation(InjectScope::class.java)
                     ?: error("Not found declaration for ${clazz.simpleName}")
 
-                notFoundCallback.onDefinitionNotFounded(clazz, clazz, annotation.share)
+                notFoundCallback.onDefinitionNotFounded(clazz, clazz, annotation1.names)
             }
         }
     }
@@ -80,5 +92,11 @@ interface BeanNotFoundCallback {
         keyClass: Class<T>,
         implementClass: Class<out T>,
         shareIn: ShareScope,
+    )
+
+    fun <T> onDefinitionNotFounded(
+        keyClass: Class<T>,
+        implementClass: Class<out T>,
+        shareIn: Array<out String>,
     )
 }

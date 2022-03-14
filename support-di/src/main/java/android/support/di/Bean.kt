@@ -3,6 +3,7 @@ package android.support.di
 import android.app.Activity
 import android.app.Application
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.getOrPut
@@ -138,16 +139,14 @@ internal class ActivityScopeBean<T>(
 ) : LifecycleBean<T>(instanceFactory) {
 
     override fun getValue(context: LookupContext, owner: ViewModelStoreOwner): T {
-        var newContext = context
         val containerOwner = when (owner) {
             is Activity -> owner
-            else -> {
-                val activity = (owner as Fragment).requireActivity()
-                newContext = (context as LifecycleLookupContext).newContext(activity)
-                activity
-            }
+            else -> (owner as Fragment).requireActivity()
         }
         return getInstanceContainer(containerOwner).getOrPut(keyClass) {
+            val newContext = (context as LifecycleLookupContext)
+                .getOrCreate(containerOwner as LifecycleOwner)
+
             instanceFactory.create(newContext)
         }
     }
@@ -162,5 +161,35 @@ internal class FragmentOrActivityScopeBean<T>(
         return getInstanceContainer(owner).getOrPut(keyClass) {
             instanceFactory.create(context)
         }
+    }
+}
+
+internal class NamedScopeBean<T>(
+    private val sharedIn: Array<out String>,
+    private val keyClass: Class<T>,
+    instanceFactory: InstanceFactory<T>,
+) : LifecycleBean<T>(instanceFactory) {
+
+    override fun getValue(context: LookupContext, owner: ViewModelStoreOwner): T {
+        val scopeOwner = requireScopeOwner(owner)
+        return getInstanceContainer(scopeOwner).getOrPut(keyClass) {
+            val newContext = (context as LifecycleLookupContext)
+                .getOrCreate(scopeOwner as LifecycleOwner)
+            instanceFactory.create(newContext)
+        }
+    }
+
+    private fun requireScopeOwner(owner: ViewModelStoreOwner): ViewModelStoreOwner {
+        var scopeOwner: ViewModelStoreOwner? = owner
+
+        while (scopeOwner != null) {
+            val annotation = scopeOwner.javaClass.getAnnotation(NamedScope::class.java)
+            if (annotation != null && annotation.name in sharedIn) return scopeOwner
+            if (scopeOwner is Activity) break
+            if (scopeOwner is Fragment) {
+                scopeOwner = scopeOwner.parentFragment ?: scopeOwner.activity
+            }
+        }
+        error("Not found @NamedScope [${sharedIn.joinToString()}]")
     }
 }
