@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSaveStateHandle
 import androidx.savedstate.SavedStateRegistryOwner
+import java.util.concurrent.atomic.AtomicReference
 
 interface SavedStateHandler {
     fun <T> getLiveData(key: String): MutableLiveData<T>
@@ -17,6 +18,7 @@ interface SavedStateHandler {
 
     fun <T> set(key: String, value: T?)
 }
+
 
 class SavedStateHandlerFactory(private val owner: LifecycleOwner) {
 
@@ -41,7 +43,7 @@ class SavedStateHandlerFactory(private val owner: LifecycleOwner) {
         }
 
         override fun <T> getLiveData(key: String, initialValue: T): MutableLiveData<T> {
-            return handle.getLiveData(key)
+            return handle.getLiveData(key, initialValue)
         }
 
         override fun <T> getOr(key: String, def: () -> T): T {
