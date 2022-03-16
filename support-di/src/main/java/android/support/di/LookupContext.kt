@@ -31,7 +31,7 @@ internal class LifecycleLookupContext(
     fun globalContext() = context
 
     fun getOrCreate(newOwner: LifecycleOwner): LookupContext {
-        return if (newOwner == owner) context
+        return if (newOwner == owner) this
         else newContext(newOwner)
     }
 }

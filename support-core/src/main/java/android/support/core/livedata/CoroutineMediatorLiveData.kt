@@ -9,9 +9,13 @@ open class CoroutineMediatorLiveData<T>(private val timeout: Long = 5000) : Medi
     private var mScope: CoroutineScope? = null
     protected val scope get() = mScope ?: error("My Scope not initialized yet!")
 
-    override fun onActive() {
-        super.onActive()
-        mScope = MyScope()
+    private fun getOrCreateScope(): CoroutineScope {
+        if (mScope == null) {
+            synchronized(this) {
+                if (mScope == null) mScope = MyScope()
+            }
+        }
+        return mScope!!
     }
 
     override fun onInactive() {
@@ -27,12 +31,10 @@ open class CoroutineMediatorLiveData<T>(private val timeout: Long = 5000) : Medi
 
     fun <R> addSourceSuspendable(
         source: LiveData<R>,
-        function: suspend CoroutineScope. (R) -> Unit
+        function: suspend CoroutineScope. (R) -> Unit,
     ) {
         super.addSource(source) {
-            mScope?.launch {
-                function(it)
-            }
+            getOrCreateScope().launch { function(it) }
         }
     }
 
