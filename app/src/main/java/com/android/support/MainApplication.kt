@@ -6,6 +6,7 @@ import android.support.di.ShareScope
 import android.support.di.dependencies
 import androidx.multidex.MultiDexApplication
 import com.android.support.app.appModule
+import com.android.support.helper.ResourceResolver
 
 @Suppress("unused")
 class MainApplication : MultiDexApplication() {
@@ -14,10 +15,9 @@ class MainApplication : MultiDexApplication() {
         super.onCreate()
         dependencies {
             factory(shareIn = ShareScope.FragmentOrActivity) {
-                if (this !is LifecycleLookup) error("Saved state handler just support for LifecycleLookup")
-                SavedStateHandlerFactory(this.owner).create()
+                SavedStateHandlerFactory((this as LifecycleLookup).owner).create()
             }
-            modules(appModule)
+            modules(appModule, ResourceResolver.module(true))
         }
     }
 }

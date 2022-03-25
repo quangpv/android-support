@@ -2,31 +2,16 @@ package android.support.core.livedata
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
-import kotlinx.coroutines.*
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
-open class CoroutineMediatorLiveData<T>(private val timeout: Long = 5000) : MediatorLiveData<T>() {
-    private var mScope: CoroutineScope? = null
-    protected val scope get() = mScope ?: error("My Scope not initialized yet!")
-
-    private fun getOrCreateScope(): CoroutineScope {
-        if (mScope == null) {
-            synchronized(this) {
-                if (mScope == null) mScope = MyScope()
-            }
-        }
-        return mScope!!
-    }
+open class CoroutineMediatorLiveData<T>(timeout: Long = 5000) : MediatorLiveData<T>() {
+    private val mScope = LiveDataScope(timeout)
+    protected val scope get() = mScope.scope ?: error("My Scope not initialized yet!")
 
     override fun onInactive() {
         super.onInactive()
-        mScope?.launch {
-            delay(timeout)
-            if (!hasActiveObservers()) {
-                mScope?.cancel()
-                mScope = null
-            }
-        }
+        mScope.tryToClose(shouldCancelClose = { hasActiveObservers() })
     }
 
     fun <R> addSourceSuspendable(
@@ -34,12 +19,7 @@ open class CoroutineMediatorLiveData<T>(private val timeout: Long = 5000) : Medi
         function: suspend CoroutineScope. (R) -> Unit,
     ) {
         super.addSource(source) {
-            getOrCreateScope().launch { function(it) }
+            mScope.getOrCreate().launch { function(it) }
         }
-    }
-
-    private class MyScope : CoroutineScope {
-        override val coroutineContext: CoroutineContext =
-            SupervisorJob() + Dispatchers.Main.immediate
     }
 }

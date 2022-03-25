@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Ứng dụng</string>
+    <string name="login_success">Đăng nhập thành công</string>
+    <string name="title_setting">Cài đặt</string>
+    <string name="title_help">Trợ giúp</string>
+    <string name="title_home">Trang chủ</string>
+    <string name="hint_search">Tìm kiếm</string>
+    <string name="sign_in">Đăng nhập</string>
+    <string name="btn_login">Đăng nhập</string>
+    <string name="btn_change_language">Đổi ngôn ngữ</string>
+    <string name="title_change_language">Thay đổi ngôn ngữ (từ resource resolver)</string>
+</resources>

@@ -20,6 +20,8 @@ import com.android.support.app.AppFragment
 import com.android.support.databinding.FragmentLoginBinding
 import com.android.support.extensions.bind
 import com.android.support.feature.HomeActivity
+import com.android.support.helper.LanguageUtils
+import com.android.support.helper.ResourceResolver
 import com.android.support.model.ui.LoginForm
 import com.android.support.repo.account.GetSavedAccountRepo
 import com.android.support.repo.auth.LoginRepo
@@ -44,13 +46,24 @@ class LoginFragment : AppFragment(R.layout.fragment_login) {
         binding.btnLogin.setOnClickListener {
             viewModel.login()
         }
+        binding.btnChangeLanguage.setOnClickListener {
+            viewModel.fetchChangeLanguageTitle()
+        }
 
         with(viewModel) {
             viewLoading.bind(binding.btnLogin::setEnabled) { !this }
             account.bind(binding.edtPassword::setText) { password }
             account.bind(binding.edtUserName::setText) { email }
             account.bind(binding.cbSaveAccount::setChecked) { save }
-            loginSuccess.bind { open<HomeActivity>() }
+            loginSuccess.bind {
+                open<HomeActivity>()
+            }
+            changeLanguage.bind { title ->
+                ChangeLanguageDialog(requireContext()).show(title) {
+                    LanguageUtils.setLocale(requireActivity(), it.code)
+                    requireActivity().recreate()
+                }
+            }
         }
     }
 
@@ -60,7 +73,8 @@ class LoginViewModel(
     private val getSavedAccountRepo: GetSavedAccountRepo,
     private val saveAccountRepo: SaveAccountRepo,
     private val loginRepo: LoginRepo,
-    private val applicationScope: ApplicationScope
+    private val applicationScope: ApplicationScope,
+    private val resourceResolver: ResourceResolver,
 ) : ViewModel(),
     WindowStatusOwner by LiveDataStatusOwner() {
     val account = getSavedAccountRepo.result
@@ -68,6 +82,7 @@ class LoginViewModel(
     val viewLoading: LoadingEvent = LoadingLiveData()
 
     val loginSuccess = SingleLiveEvent<Int>()
+    val changeLanguage = SingleLiveEvent<String>()
 
     fun login() = launch(viewLoading, error) {
         loginRepo(form.value ?: return@launch)
@@ -79,5 +94,9 @@ class LoginViewModel(
         applicationScope.launch {
             saveAccountRepo()
         }
+    }
+
+    fun fetchChangeLanguageTitle() {
+        changeLanguage.post(resourceResolver.getString(R.string.title_change_language))
     }
 }

@@ -10,6 +10,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 
 
 fun <T, V> LiveData<T>.map(function: (T?) -> V?): LiveData<V> {
@@ -32,7 +33,8 @@ fun <T, V> LiveData<T>.mapNotNull(function: (T) -> V?): LiveData<V> {
     val next = MediatorLiveData<V>()
     next.addSource(this) {
         if (it != null) {
-            next.value = function(it)
+            val data = function(it) ?: return@addSource
+            next.value = data
         }
     }
     return next
@@ -42,7 +44,8 @@ fun <T, V> LiveData<T>.coroutineMapNotNull(function: suspend CoroutineScope.(T) 
     val next = CoroutineMediatorLiveData<V>()
     next.addSourceSuspendable(this) {
         if (it != null) {
-            next.value = function(it)
+            val data = function(it) ?: return@addSourceSuspendable
+            next.value = data
         }
     }
     return next
@@ -98,7 +101,7 @@ fun <T> LiveData<T>.toSingle(): LiveData<T> {
 fun <A, B, C> combine(
     aLive: LiveData<A>,
     bLive: LiveData<B>,
-    function: (A?, B?) -> C?
+    function: (A?, B?) -> C?,
 ): LiveData<C> {
     val composeData = ComposeDataImpl(2)
     val liveData = MediatorLiveData<C>()
@@ -118,7 +121,7 @@ fun <A, B, C> combine(
 fun <A, B, C> coroutineCombine(
     aLive: LiveData<A>,
     bLive: LiveData<B>,
-    function: suspend CoroutineScope.(A?, B?) -> C?
+    function: suspend CoroutineScope.(A?, B?) -> C?,
 ): LiveData<C> {
     val composeData = SuspendComposeDataImpl(2)
     val liveData = CoroutineMediatorLiveData<C>()
@@ -138,7 +141,7 @@ fun <A, B, C> coroutineCombine(
 fun <A, B, C> combineNotNull(
     aLive: LiveData<A>,
     bLive: LiveData<B>,
-    function: (A, B) -> C
+    function: (A, B) -> C,
 ): LiveData<C> {
     val composeData = ComposeDataImpl(2)
     val liveData = MediatorLiveData<C>()
@@ -158,7 +161,7 @@ fun <A, B, C> combineNotNull(
 fun <A, B, C> coroutineCombineNotNull(
     aLive: LiveData<A>,
     bLive: LiveData<B>,
-    function: suspend CoroutineScope.(A, B) -> C
+    function: suspend CoroutineScope.(A, B) -> C,
 ): LiveData<C> {
     val composeData = SuspendComposeDataImpl(2)
     val liveData = CoroutineMediatorLiveData<C>()
@@ -179,7 +182,7 @@ fun <A, B, C> coroutineCombineNotNull(
 fun <A, B, C> mediatorOf(
     aLive: LiveData<A>,
     bLive: LiveData<B>,
-    function: (A?, B?) -> C
+    function: (A?, B?) -> C,
 ): LiveData<C> {
     val composeData = ComposeDataImpl(2)
     composeData.anyActivated {
@@ -201,7 +204,7 @@ fun <A, B, C> mediatorOf(
 fun <A, B, C> coroutineMediatorOf(
     aLive: LiveData<A>,
     bLive: LiveData<B>,
-    function: suspend CoroutineScope.(A?, B?) -> C
+    function: suspend CoroutineScope.(A?, B?) -> C,
 ): LiveData<C> {
     val composeData = SuspendComposeDataImpl(2)
     composeData.anyActivated {
@@ -243,6 +246,10 @@ fun <T> LiveData<List<T>>.asState(empty: List<T> = emptyList()): MediatorLiveDat
 }
 
 fun <T : Any> LiveData<T>.distributeBy(live: DistributionLiveData<T>) {
+    live.connect(this)
+}
+
+fun <T : Any> Flow<T>.distributeBy(live: DistributionLiveData<T>) {
     live.connect(this)
 }
 
