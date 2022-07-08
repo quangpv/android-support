@@ -29,16 +29,15 @@ class ViewScope(private val view: ViewGroup) {
 
     init {
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(p0: View?) {
+            override fun onViewAttachedToWindow(p0: View?) {}
+
+            override fun onViewDetachedFromWindow(p0: View?) {
                 mCache.forEach { (_, v) ->
                     if (v is AutoCloseable) {
                         v.close()
                     }
                 }
                 mCache.clear()
-            }
-
-            override fun onViewDetachedFromWindow(p0: View?) {
                 view.removeOnAttachStateChangeListener(this)
             }
         })
