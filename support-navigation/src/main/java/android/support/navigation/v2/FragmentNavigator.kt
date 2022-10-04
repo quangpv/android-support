@@ -8,7 +8,7 @@ import kotlin.reflect.KClass
 
 class FragmentNavigator(
     fragmentManager: FragmentManager,
-    container: Int
+    container: Int,
 ) : Navigator(fragmentManager, container) {
 
     private val mStack = DestinationStack()
@@ -16,7 +16,6 @@ class FragmentNavigator(
     override val lastDestination: Destination? get() = mStack.last
 
     init {
-
         mStack.onPopBackStackListener = {
             if (!it.keepInstance) tagManager.remove(it.kClass)
         }
@@ -58,7 +57,7 @@ class FragmentNavigator(
     private fun SupportFragmentTransaction.executePopFragment(
         enter: Fragment,
         exit: Fragment?,
-        removes: List<DestinationWrapper>
+        removes: List<DestinationWrapper>,
     ) {
         var exitInRemoves = false
 
@@ -95,7 +94,7 @@ class FragmentNavigator(
 
     private fun createDestination(
         kClass: KClass<out Fragment>,
-        navOptions: NavOptions?
+        navOptions: NavOptions?,
     ): DestinationWrapper {
         val reuseFragment: Fragment? =
             if (navOptions?.singleTask == true) mStack.find(kClass)?.fragment else null
@@ -107,7 +106,7 @@ class FragmentNavigator(
 
     private fun createKeepInstanceDestination(
         kClass: KClass<out Fragment>,
-        navOptions: NavOptions
+        navOptions: NavOptions,
     ): DestinationWrapper {
         val tagId = tagManager.getTagId(kClass)
         val des = Destination(kClass, tagId, navOptions)
@@ -116,7 +115,7 @@ class FragmentNavigator(
     }
 
     private fun doPopBackStack(
-        navOptions: NavOptions?
+        navOptions: NavOptions?,
     ): List<DestinationWrapper> {
         navOptions?.popupTo ?: return emptyList()
         return doPopBackStack(navOptions.popupTo, navOptions.inclusive)
@@ -124,7 +123,7 @@ class FragmentNavigator(
 
     private fun doPopBackStack(
         popupTo: KClass<out Fragment>,
-        inclusive: Boolean
+        inclusive: Boolean,
     ): List<DestinationWrapper> {
         val removes = arrayListOf<DestinationWrapper>()
 
@@ -174,10 +173,14 @@ class FragmentNavigator(
         return true
     }
 
-    override fun navigateUp(result: Bundle?): Boolean {
+    override fun navigateUp(result: Bundle?, ignoreBackable: Boolean): Boolean {
         if (mStack.isEmpty) return false
         val currentFragment = mStack.last!!.requireFragment
-        if (currentFragment is Backable && currentFragment.onInterceptBackPress()) return true
+        if (currentFragment is Backable) {
+            if (!ignoreBackable) {
+                if (currentFragment.onInterceptBackPress()) return true
+            }
+        }
 
         if (mStack.size == 1) return false
         val current = mStack.pop() ?: return false

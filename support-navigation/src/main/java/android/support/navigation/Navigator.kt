@@ -16,7 +16,7 @@ import kotlin.reflect.KClass
 
 abstract class Navigator(
     protected val fragmentManager: FragmentManager,
-    @IdRes val container: Int
+    @IdRes val container: Int,
 ) {
     companion object {
         private const val KEY_SAVED_STATE = "com:support:core:navigation:navigator"
@@ -101,14 +101,10 @@ abstract class Navigator(
     abstract fun navigate(
         kClass: KClass<out Fragment>,
         args: Bundle? = null,
-        navOptions: NavOptions? = null
+        navOptions: NavOptions? = null,
     )
 
-    fun navigateUp(): Boolean {
-        return navigateUp(null)
-    }
-
-    abstract fun navigateUp(result: Bundle?): Boolean
+    abstract fun navigateUp(result: Bundle? = null, ignoreBackable: Boolean = false): Boolean
 
     open fun popBackStack(popupTo: KClass<out Fragment>, inclusive: Boolean): Boolean {
         throw UnsupportedOperationException("Not support, please use FragmentNavigator version 2")

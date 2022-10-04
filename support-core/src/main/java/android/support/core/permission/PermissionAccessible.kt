@@ -15,21 +15,21 @@ interface PermissionAccessible {
         requestCode: Int,
         vararg permissions: String,
         options: PermissionSettingOptions? = null,
-        onPermission: (Boolean) -> Unit
+        onPermission: (Boolean) -> Unit,
     ): PermissionRequest
 
     fun checkAny(
         requestCode: Int,
         vararg permissions: String,
         options: PermissionSettingOptions? = null,
-        onPermission: (Boolean) -> Unit
+        onPermission: (Boolean) -> Unit,
     ): PermissionRequest
 
     fun access(
         requestCode: Int,
         vararg permissions: String,
         options: PermissionSettingOptions? = null,
-        onPermission: () -> Unit
+        onPermission: () -> Unit,
     ): PermissionRequest {
         return check(requestCode, *permissions, options = options) {
             if (it) onPermission()
@@ -40,7 +40,7 @@ interface PermissionAccessible {
         requestCode: Int,
         vararg permissions: String,
         options: PermissionSettingOptions? = null,
-        onPermission: () -> Unit
+        onPermission: () -> Unit,
     ): PermissionRequest {
         return checkAny(requestCode, *permissions, options = options) {
             if (it) onPermission()
@@ -51,7 +51,7 @@ interface PermissionAccessible {
         requestCode: Int,
         vararg permissions: String,
         options: PermissionSettingOptions? = null,
-        onPermission: () -> Unit
+        onPermission: () -> Unit,
     ): PermissionRequest {
         var request: PermissionRequest? = null
         request = check(requestCode, *permissions, options = options) {
@@ -64,7 +64,7 @@ interface PermissionAccessible {
         requestCode: Int,
         vararg permissions: String,
         options: PermissionSettingOptions? = null,
-        onPermission: () -> Unit
+        onPermission: () -> Unit,
     ): PermissionRequest {
         var request: PermissionRequest? = null
         request = checkAny(requestCode, *permissions, options = options) {
@@ -78,7 +78,7 @@ interface PermissionAccessible {
 class PermissionSettingOptions(
     val titleDenied: String = "Permission denied",
     val messageDenied: String = "You need to allow permission to use this feature",
-    val positive: String = "Ok"
+    val positive: String = "Ok",
 )
 
 
@@ -88,7 +88,7 @@ abstract class PermissionDispatcher {
     private var mRechecked = hashMapOf<String, Int>()
     private var mOpenSettingDialog: AlertDialog? = null
 
-    abstract fun requestPermission(permissions: Array<out String>, requestCode: Int)
+    abstract fun requestPermission(permissions: Array<String>, requestCode: Int)
 
     abstract fun registryResultCallback(requestCode: Int, callback: () -> Unit)
 
@@ -108,7 +108,7 @@ abstract class PermissionDispatcher {
     fun showSettingDialog(
         options: PermissionSettingOptions?,
         requestCode: Int,
-        onCancel: () -> Unit
+        onCancel: () -> Unit,
     ) {
         if (mOpenSettingDialog == null) {
             val settingOptions = options ?: PermissionSettingOptions()
@@ -167,11 +167,12 @@ abstract class PermissionRequest(
         request()
     }
 
+    @Suppress("UNCHECKED_CAST")
     protected fun checkOrShowSetting() {
         if (shouldShowSettings(permissions)) {
             dispatcher.showSettingDialog(options, requestCode) { notifyChange() }
         } else {
-            dispatcher.requestPermission(permissions, requestCode)
+            dispatcher.requestPermission(permissions as Array<String>, requestCode)
             dispatcher.increaseRecheck(permissions)
         }
     }

@@ -11,17 +11,17 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 
 abstract class AbstractPermissionDispatcher : PermissionDispatcher() {
-    private val mPermissions = SparseArray<ActivityResultLauncher<Array<out String>>>()
+    private val mPermissions = SparseArray<ActivityResultLauncher<Array<String>>>()
     private val mSettings = SparseArray<ActivityResultLauncher<Intent>>()
     override val isFinishing: Boolean
         get() = activity.isFinishing
 
     abstract fun <I, O> registerForActivityResult(
         contract: ActivityResultContract<I, O>,
-        callback: ActivityResultCallback<O>
+        callback: ActivityResultCallback<O>,
     ): ActivityResultLauncher<I>?
 
-    final override fun requestPermission(permissions: Array<out String>, requestCode: Int) {
+    final override fun requestPermission(permissions: Array<String>, requestCode: Int) {
         mPermissions[requestCode]?.launch(permissions)
     }
 
@@ -45,8 +45,8 @@ abstract class AbstractPermissionDispatcher : PermissionDispatcher() {
 
     private class OpenSettingContract :
         ActivityResultContract<Intent, Unit>() {
-        override fun createIntent(context: Context, input: Intent?): Intent {
-            return input ?: error("Intent can not be null")
+        override fun createIntent(context: Context, input: Intent): Intent {
+            return input
         }
 
         override fun parseResult(resultCode: Int, intent: Intent?) {
@@ -56,14 +56,14 @@ abstract class AbstractPermissionDispatcher : PermissionDispatcher() {
 }
 
 class ActivityDispatcher(
-    override val activity: FragmentActivity
+    override val activity: FragmentActivity,
 ) : AbstractPermissionDispatcher() {
     override val isFinishing: Boolean
         get() = activity.isFinishing
 
     override fun <I, O> registerForActivityResult(
         contract: ActivityResultContract<I, O>,
-        callback: ActivityResultCallback<O>
+        callback: ActivityResultCallback<O>,
     ): ActivityResultLauncher<I> {
         return activity.registerForActivityResult(contract, callback)
     }
@@ -78,7 +78,7 @@ class FragmentDispatcher(val fragment: Fragment) : AbstractPermissionDispatcher(
 
     override fun <I, O> registerForActivityResult(
         contract: ActivityResultContract<I, O>,
-        callback: ActivityResultCallback<O>
+        callback: ActivityResultCallback<O>,
     ): ActivityResultLauncher<I>? {
         return fragment.registerForActivityResult(contract, callback)
     }
