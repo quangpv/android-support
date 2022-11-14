@@ -70,7 +70,20 @@ class PermissionRequestImpl(
         return false
     }
 
+    private fun isAllowed(): Boolean {
+        return permissions.all {
+            ContextCompat.checkSelfPermission(
+                dispatcher.activity,
+                it
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
     override fun doRequest() {
+        if (isAllowed()) {
+            onPermission(true)
+            return
+        }
         checkOrShowSetting()
     }
 }
