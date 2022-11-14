@@ -70,7 +70,7 @@ class PermissionRequestImpl(
         return false
     }
 
-    private fun isAllowed(): Boolean {
+    private fun isAllAllowed(): Boolean {
         return permissions.all {
             ContextCompat.checkSelfPermission(
                 dispatcher.activity,
@@ -80,7 +80,7 @@ class PermissionRequestImpl(
     }
 
     override fun doRequest() {
-        if (isAllowed()) {
+        if (isAllAllowed()) {
             onPermission(true)
             return
         }
