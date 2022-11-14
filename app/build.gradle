@@ -10,12 +10,12 @@ def keystoreDebugProperties = new Properties()
 keystoreDebugProperties.load(new FileInputStream(rootProject.file("keystore-debug.properties")))
 
 android {
-    compileSdk 31
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.android.support"
         minSdk 21
-        targetSdk 31
+        targetSdk 33
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
