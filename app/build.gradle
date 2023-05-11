@@ -85,6 +85,7 @@ dependencies {
     implementation project(':support-core')
     implementation project(':support-persistent')
     implementation project(':support-di')
+    implementation project(':support-di-ext')
     implementation project(':support-navigation')
     implementation project(':support-viewmodel')
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'

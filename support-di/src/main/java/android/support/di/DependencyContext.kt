@@ -1,24 +1,5 @@
 package android.support.di
 
-import android.app.Application
-import androidx.lifecycle.LifecycleOwner
-import kotlin.reflect.KClass
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Inject(
-    val share: ShareScope = ShareScope.None,
-)
-
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class InjectBy(
-    val clazz: KClass<out Injectable>,
-    val share: ShareScope = ShareScope.None,
-)
-
-interface Injectable
 
 class DependenceContext : ProvideContext() {
 
@@ -41,9 +22,18 @@ class DependenceContext : ProvideContext() {
     })
 
     private val mGlobalLookup = GlobalLookupContext(mBeanContainer)
+    private var factory: ScopeBeanFactory? = null
 
-    internal fun set(application: Application) {
-        mBeanContainer.set(application)
+    fun clear() {
+        mBeanContainer.clear()
+    }
+
+    fun setScopeBeanFactory(factory: ScopeBeanFactory) {
+        this.factory = factory
+    }
+
+    fun setBeanRegister(register: BeanRegister) {
+        mBeanContainer.setBeanRegister(register)
     }
 
     private fun error(clazz: Class<*>) {
@@ -60,9 +50,10 @@ class DependenceContext : ProvideContext() {
 
         mBeanContainer[clazz] = when (shareIn) {
             ShareScope.Singleton -> SingletonBean(instanceFactory)
-            ShareScope.Activity -> ActivityScopeBean(clazz, instanceFactory)
-            ShareScope.Fragment -> FragmentScopeBean(clazz, instanceFactory)
-            ShareScope.FragmentOrActivity -> FragmentOrActivityScopeBean(clazz, instanceFactory)
+            ShareScope.Activity,
+            ShareScope.Fragment,
+            ShareScope.FragmentOrActivity -> factory?.create(shareIn, clazz, instanceFactory)
+                ?: error("Not found scope bean factory for $shareIn")
             else -> DefaultFactoryBean(instanceFactory)
         }
     }
@@ -74,7 +65,8 @@ class DependenceContext : ProvideContext() {
         instanceFactory: InstanceFactory<T>,
     ) {
         if (mBeanContainer.contains(clazz) && !override) error(clazz)
-        mBeanContainer[clazz] = NamedScopeBean(shareIn, clazz, instanceFactory)
+        mBeanContainer[clazz] = factory?.create(shareIn, clazz, instanceFactory)
+            ?: error("Not found scope bean factory for ${shareIn.joinToString()}")
     }
 
     override fun <T> single(
@@ -107,16 +99,16 @@ class DependenceContext : ProvideContext() {
         module.forEach { it.provide() }
     }
 
-    fun <T> getOrNull(clazz: Class<T>, owner: LifecycleOwner): T? {
+    fun <T> getOrNull(clazz: Class<T>, owner: ScopeOwner): T? {
         return mBeanContainer.lookup(clazz)
-            .getValue(LifecycleLookupContext(mGlobalLookup, owner))
+            .getValue(ScopeLookupContext(mGlobalLookup, owner))
     }
 
     fun <T> getOrNull(clazz: Class<T>): T? {
         return mGlobalLookup.getOrNull(clazz)
     }
 
-    fun <T> get(clazz: Class<T>, owner: LifecycleOwner): T {
+    fun <T> get(clazz: Class<T>, owner: ScopeOwner): T {
         return getOrNull(clazz, owner) ?: error("Not found bean ${clazz.simpleName}")
     }
 
@@ -124,7 +116,7 @@ class DependenceContext : ProvideContext() {
         return getOrNull(clazz) ?: error("Not found bean ${clazz.simpleName}")
     }
 
-    inline fun <reified T> get(owner: LifecycleOwner): T {
+    inline fun <reified T> get(owner: ScopeOwner): T {
         return get(T::class.java, owner)
     }
 

@@ -1,31 +1,18 @@
 package android.support.di
 
-import android.app.Application
-import android.content.Context
-import androidx.lifecycle.ViewModel
-
 
 @Suppress("unchecked_cast")
 class BeanContainer(private val notFoundCallback: BeanNotFoundCallback) : BeanLocator {
-    private lateinit var mApplicationBean: ApplicationBean
+    private var register: BeanRegister? = null
     private val mBean = hashMapOf<Class<*>, Bean<*>>()
 
     override fun <T> lookup(clazz: Class<T>): Bean<T> {
         if (!mBean.containsKey(clazz)) {
-            if (clazz.isAssignableFrom(Application::class.java)
-                || clazz.isAssignableFrom(Context::class.java)
-            ) {
-                if (!::mApplicationBean.isInitialized) {
-                    error("Application is not set yet")
-                }
-                return mApplicationBean as Bean<T>
-            }
             checkAnnotation(clazz)
         }
         if (mBean.containsKey(clazz)) return mBean[clazz] as Bean<T>
         error("Not found ${clazz.name}")
     }
-
 
     fun contains(clazz: Class<*>): Boolean {
         return mBean.containsKey(clazz)
@@ -41,13 +28,7 @@ class BeanContainer(private val notFoundCallback: BeanNotFoundCallback) : BeanLo
 
     private fun <T> checkAnnotation(clazz: Class<T>) {
         when {
-            ViewModel::class.java.isAssignableFrom(clazz) -> {
-                notFoundCallback.onDefinitionNotFounded(
-                    clazz,
-                    clazz,
-                    ShareScope.None
-                )
-            }
+            register?.registry(clazz, notFoundCallback) == true -> {}
             clazz.isInterface -> {
                 val annotation = clazz.getAnnotation(InjectBy::class.java)
                 if (annotation != null) @Suppress("unchecked_cast")
@@ -79,12 +60,15 @@ class BeanContainer(private val notFoundCallback: BeanNotFoundCallback) : BeanLo
         }
     }
 
-    fun set(app: Application) {
-        if (::mApplicationBean.isInitialized && !mApplicationBean.isDiff(app)) return
-        mApplicationBean = ApplicationBean(app)
+    fun clear() {
         mBean.forEach { (_, v) -> v.close() }
         mBean.clear()
     }
+
+    fun setBeanRegister(register: BeanRegister) {
+        this.register = register
+    }
+
 }
 
 interface BeanNotFoundCallback {

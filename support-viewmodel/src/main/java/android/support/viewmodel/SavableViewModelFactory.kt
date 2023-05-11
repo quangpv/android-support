@@ -3,6 +3,7 @@
 // androidx.lifecycle
 package androidx.lifecycle
 
+import android.support.di.ScopeOwner
 import android.support.di.dependenceContext
 import android.support.viewmodel.SavedStateCreatable
 import androidx.savedstate.SavedStateRegistry
@@ -12,7 +13,10 @@ class SavableViewModelFactory(private val owner: SavedStateRegistryOwner) :
     ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        val viewModel = dependenceContext.get(modelClass, owner as LifecycleOwner)
+        val viewModel = dependenceContext.get(
+            modelClass,
+            owner as? ScopeOwner ?: error("$owner is not ScopeOwner")
+        )
         when (viewModel) {
             is SavedStateCreatable -> onCreateSavedState(viewModel, owner)
         }

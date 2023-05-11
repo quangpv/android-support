@@ -1,12 +1,10 @@
 package android.support.di
 
-import android.util.Log
-
 interface InstanceFactory<T> {
     fun create(lookupContext: LookupContext): T
 }
 
-internal class ProvideInstanceFactory<T>(
+class ProvideInstanceFactory<T>(
     private val function: LookupContext.() -> T
 ) : InstanceFactory<T> {
     override fun create(lookupContext: LookupContext): T {
@@ -14,7 +12,7 @@ internal class ProvideInstanceFactory<T>(
     }
 }
 
-internal class ReflectNewInstanceFactory<T>(
+class ReflectNewInstanceFactory<T>(
     private val clazz: Class<out T>
 ) : InstanceFactory<T> {
 
@@ -31,7 +29,6 @@ internal class ReflectNewInstanceFactory<T>(
                 .toTypedArray()
             constructor.newInstance(*params) as T
         } catch (e: Throwable) {
-            Log.e("DependencyContext", "Error lookup for ${clazz.name}")
             throw e
         }
     }

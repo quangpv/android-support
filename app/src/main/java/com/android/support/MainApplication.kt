@@ -1,10 +1,11 @@
 package com.android.support
 
 import android.support.core.savedstate.SavedStateHandlerFactory
-import android.support.di.LifecycleLookup
+import android.support.di.ScopeLookup
 import android.support.di.ShareScope
-import android.support.di.dependencies
+import androidx.lifecycle.LifecycleOwner
 import androidx.multidex.MultiDexApplication
+import com.afilabs.support.di.ext.dependencies
 import com.android.support.app.appModule
 import com.android.support.helper.ResourceResolver
 
@@ -15,7 +16,7 @@ class MainApplication : MultiDexApplication() {
         super.onCreate()
         dependencies {
             factory(shareIn = ShareScope.FragmentOrActivity) {
-                SavedStateHandlerFactory((this as LifecycleLookup).owner).create()
+                SavedStateHandlerFactory((this as ScopeLookup).owner as LifecycleOwner).create()
             }
             modules(appModule, ResourceResolver.module(true))
         }

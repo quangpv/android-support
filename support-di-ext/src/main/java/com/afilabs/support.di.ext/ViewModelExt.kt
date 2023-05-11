@@ -7,7 +7,7 @@ internal fun <T : ViewModel> ViewModelStore.getOrPut(key: String, def: () -> T):
     var item = this.get(key) as? T
     if (item == null) {
         synchronized(ViewModelStore::class) {
-            if (item == null) {
+            if (this.get(key) == null) {
                 item = def()
                 put(key, item)
             }

@@ -3,6 +3,7 @@ package com.android.support.app
 import android.support.core.event.WindowStatusOwner
 import android.support.core.extensions.LifecycleSubscriberExt
 import android.support.core.route.RouteDispatcher
+import android.support.di.ScopeOwner
 import android.support.viewmodel.ViewModelRegistrable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
@@ -15,7 +16,7 @@ abstract class AppFragment(contentLayoutId: Int) : Fragment(contentLayoutId),
     LifecycleSubscriberExt,
     ViewModelRegistrable,
     NotSupportable,
-    AppPermissionOwner,
+    AppPermissionOwner, ScopeOwner,
     ErrorHandler by ErrorHandlerImpl() {
 
     val self get() = this
